@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이서희 — Destiny Architect</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Space+Mono:wght@400;700&family=Noto+Serif+KR:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #070707;
+    --surface: #0f0f0f;
+    --surface2: #161616;
+    --accent: #b8965a;
+    --accent-light: #d4b07a;
+    --accent-dim: rgba(184,150,90,0.1);
+    --text: #e2dbd0;
+    --muted: #5c5650;
+    --dim: #1e1c1a;
+    --red: #6b1e1e;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cormorant Garamond', 'Noto Serif KR', Georgia, serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  @media (hover: none) {
+    body { cursor: auto; }
+    .cursor, .cursor-ring { display: none; }
+  }
+
+  .cursor {
+    position: fixed; width: 6px; height: 6px;
+    background: var(--accent); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+  }
+  .cursor-ring {
+    position: fixed; width: 32px; height: 32px;
+    border: 1px solid rgba(184,150,90,0.35);
+    border-radius: 50%; pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.13s ease-out;
+  }
+
+  /* grain */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9990; opacity: 0.5;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 24px 52px;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(7,7,7,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--dim);
+  }
+  .nav-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px; font-style: italic; font-weight: 300;
+    letter-spacing: 0.08em; color: var(--accent);
+    line-height: 1.2;
+  }
+  .nav-logo small {
+    display: block; font-style: normal;
+    font-size: 9px; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.18em;
+    color: var(--muted); text-decoration: none;
+    text-transform: uppercase; transition: color 0.3s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute;
+    bottom: -3px; left: 0; width: 0; height: 1px;
+    background: var(--accent); transition: width 0.3s;
+  }
+  .nav-links a:hover { color: var(--accent); }
+  .nav-links a:hover::after { width: 100%; }
+
+  /* 모바일 */
+  .nav-ham {
+    display: none; flex-direction: column; gap: 5px;
+    background: none; border: none; cursor: pointer; padding: 4px;
+  }
+  .nav-ham span { display: block; width: 20px; height: 1px; background: var(--accent); transition: all 0.3s; }
+  .nav-ham.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .nav-ham.open span:nth-child(2) { opacity: 0; }
+  .nav-ham.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  .nav-mobile {
+    display: none; position: fixed;
+    inset: 0; background: rgba(7,7,7,0.98); z-index: 490;
+    flex-direction: column; align-items: center; justify-content: center; gap: 44px;
+  }
+  .nav-mobile.open { display: flex; }
+  .nav-mobile a {
+    font-family: 'Cormorant Garamond', serif; font-size: 52px;
+    font-style: italic; font-weight: 300;
+    color: var(--muted); text-decoration: none; transition: color 0.3s;
+    letter-spacing: 0.04em;
+  }
+  .nav-mobile a:hover { color: var(--accent); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh; position: relative;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 80px 52px 72px;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 55% 60% at 75% 35%, rgba(184,150,90,0.06) 0%, transparent 65%),
+      radial-gradient(ellipse 35% 50% at 15% 75%, rgba(107,30,30,0.05) 0%, transparent 55%),
+      linear-gradient(170deg, #0d0b08 0%, #070707 55%);
+  }
+  /* 대각선 장식선 */
+  .hero-deco {
+    position: absolute; top: 0; right: 140px; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent 0%, var(--dim) 25%, var(--dim) 75%, transparent 100%);
+    opacity: 0.6;
+  }
+  .hero-deco2 {
+    position: absolute; top: 0; right: 142px; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent 0%, rgba(184,150,90,0.12) 30%, rgba(184,150,90,0.12) 70%, transparent 100%);
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 0.3em;
+    color: var(--accent); margin-bottom: 20px;
+    display: flex; align-items: center; gap: 14px;
+    opacity: 0; animation: fadeUp 0.7s 0.2s forwards;
+  }
+  .hero-eyebrow::before { content: ''; width: 32px; height: 1px; background: var(--accent); }
+
+  .hero-name-kr {
+    font-family: 'Noto Serif KR', serif;
+    font-size: clamp(56px, 10vw, 130px);
+    font-weight: 300; line-height: 1;
+    letter-spacing: -0.01em; color: var(--text);
+    opacity: 0; animation: fadeUp 0.8s 0.4s forwards;
+  }
+  .hero-name-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(16px, 2.5vw, 26px);
+    font-style: italic; font-weight: 300;
+    color: var(--accent); letter-spacing: 0.12em;
+    margin-top: 10px;
+    opacity: 0; animation: fadeUp 0.8s 0.6s forwards;
+  }
+  .hero-title-line {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 28px;
+    opacity: 0; animation: fadeUp 0.8s 0.7s forwards;
+  }
+  .hero-title-line::before { content: ''; width: 1px; height: 40px; background: var(--accent); opacity: 0.4; }
+  .hero-role {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--muted);
+    line-height: 1.7;
+  }
+  .hero-role strong { display: block; color: var(--text); font-weight: 400; }
+
+  .hero-desc {
+    margin-top: 36px; max-width: 420px;
+    font-size: clamp(16px, 2vw, 19px);
+    font-weight: 300; font-style: italic;
+    color: var(--muted); line-height: 1.75;
+    opacity: 0; animation: fadeUp 0.8s 0.9s forwards;
+  }
+  .hero-desc em { color: var(--text); font-style: normal; }
+
+  .hero-tags {
+    margin-top: 40px; display: flex; gap: 10px; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 0.8s 1.1s forwards;
+  }
+  .hero-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 7px 16px; border: 1px solid var(--dim); color: var(--muted);
+    transition: all 0.3s;
+  }
+  .hero-tag:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  .hero-scroll {
+    position: absolute; bottom: 40px; right: 52px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.25em; color: var(--muted);
+    writing-mode: vertical-rl; display: flex; align-items: center; gap: 14px;
+    opacity: 0; animation: fadeIn 1s 1.6s forwards;
+  }
+  .hero-scroll::before {
+    content: ''; display: block; width: 1px; height: 52px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+    animation: scrollPulse 2.2s 1.6s infinite;
+  }
+
+  /* ── INFO STRIP ── */
+  .info-strip {
+    border-top: 1px solid var(--dim);
+    border-bottom: 1px solid var(--dim);
+    padding: 0 52px;
+    display: flex; overflow: hidden;
+  }
+  .info-item {
+    flex: 1; padding: 28px 0;
+    border-right: 1px solid var(--dim);
+    display: flex; flex-direction: column; gap: 6px;
+    padding-right: 32px; padding-left: 0;
+  }
+  .info-item:not(:first-child) { padding-left: 32px; }
+  .info-item:last-child { border-right: none; }
+  .info-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .info-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px; font-weight: 300; color: var(--text);
+    letter-spacing: 0.03em;
+  }
+  .info-value a { color: var(--accent); text-decoration: none; }
+  .info-value a:hover { text-decoration: underline; }
+
+  /* ── ABOUT ── */
+  .about {
+    padding: 100px 52px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: start;
+    border-bottom: 1px solid var(--dim);
+  }
+  .sec-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.3em;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .sec-label::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+  .about-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(38px, 5vw, 68px);
+    font-weight: 300; font-style: italic;
+    line-height: 1.05; color: var(--text);
+    margin-bottom: 32px;
+  }
+  .about-heading em { color: var(--accent); font-style: normal; }
+  .about-body {
+    font-size: clamp(15px, 1.6vw, 18px);
+    font-weight: 300; line-height: 1.85;
+    color: var(--muted);
+  }
+  .about-body em { color: var(--text); font-style: italic; }
+  .about-body + .about-body { margin-top: 20px; }
+
+  .about-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+  .about-card {
+    background: var(--surface); padding: 32px 24px;
+    position: relative; overflow: hidden; transition: background 0.3s;
+  }
+  .about-card:hover { background: var(--surface2); }
+  .about-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; width: 100%; height: 2px;
+    background: var(--accent); transform: scaleX(0);
+    transform-origin: left; transition: transform 0.4s;
+  }
+  .about-card:hover::before { transform: scaleX(1); }
+  .card-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 52px; font-weight: 300;
+    color: var(--accent); line-height: 1;
+  }
+  .card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--muted);
+    margin-top: 8px;
+  }
+
+  /* ── WORK ── */
+  .work {
+    padding: 100px 52px;
+    border-bottom: 1px solid var(--dim);
+  }
+  .work-header {
+    display: flex; justify-content: space-between;
+    align-items: flex-end; margin-bottom: 56px;
+  }
+  .work-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 300; font-style: italic; color: var(--text);
+  }
+  .work-filter {
+    display: flex; gap: 4px;
+  }
+  .filter-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 8px 16px; background: none;
+    border: 1px solid var(--dim); color: var(--muted);
+    cursor: pointer; transition: all 0.25s;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    border-color: var(--accent); color: var(--accent); background: var(--accent-dim);
+  }
+
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 12px;
+  }
+  .work-item {
+    background: var(--surface);
+    overflow: hidden; cursor: pointer;
+    transition: transform 0.4s ease;
+    position: relative;
+  }
+  .work-item:hover { transform: translateY(-4px); }
+  .work-item:nth-child(1) { grid-column: span 7; }
+  .work-item:nth-child(2) { grid-column: span 5; }
+  .work-item:nth-child(3) { grid-column: span 4; }
+  .work-item:nth-child(4) { grid-column: span 5; }
+  .work-item:nth-child(5) { grid-column: span 3; }
+  .work-item:nth-child(6) { grid-column: span 9; }
+
+  .work-thumb {
+    aspect-ratio: 16/10; position: relative;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  .work-item:nth-child(1) .work-thumb,
+  .work-item:nth-child(6) .work-thumb { aspect-ratio: 16/9; }
+  .work-item:nth-child(5) .work-thumb { aspect-ratio: 3/4; }
+
+  .work-thumb-bg {
+    position: absolute; inset: 0;
+    transition: transform 0.6s ease;
+  }
+  .work-item:hover .work-thumb-bg { transform: scale(1.04); }
+
+  .wb1 { background: linear-gradient(135deg, #150808 0%, #2a1212 50%, #0a0a14 100%); }
+  .wb2 { background: linear-gradient(155deg, #080e18 0%, #0f1a28 100%); }
+  .wb3 { background: linear-gradient(145deg, #0e0c06 0%, #1c1800 100%); }
+  .wb4 { background: linear-gradient(160deg, #0a1410 0%, #0d1e18 100%); }
+  .wb5 { background: linear-gradient(140deg, #12081a 0%, #1c0d28 100%); }
+  .wb6 { background: linear-gradient(150deg, #180a0a 0%, #280e0e 100%); }
+
+  .work-thumb-deco { position: relative; z-index: 1; opacity: 0.3; transition: opacity 0.3s; }
+  .work-item:hover .work-thumb-deco { opacity: 0.55; }
+
+  .work-overlay {
+    position: absolute; inset: 0; z-index: 2;
+    background: linear-gradient(to top, rgba(7,7,7,0.92) 0%, transparent 60%);
+    padding: 20px; display: flex; flex-direction: column;
+    justify-content: flex-end;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .work-item:hover .work-overlay { opacity: 1; }
+  .work-cat {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 6px;
+  }
+  .work-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px; font-weight: 300; color: var(--text);
+  }
+
+  .work-meta {
+    padding: 14px 18px;
+    border-top: 1px solid var(--dim);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .work-meta-title { font-size: 11px; color: var(--muted); font-family: 'Space Mono', monospace; }
+  .work-meta-type {
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--dim); transition: color 0.2s; font-family: 'Space Mono', monospace;
+  }
+  .work-item:hover .work-meta-type { color: var(--accent); }
+
+  /* ── SKILLS ── */
+  .skills {
+    padding: 100px 52px;
+    border-bottom: 1px solid var(--dim);
+  }
+  .skills-grid {
+    margin-top: 56px;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--dim);
+  }
+  .skill-card {
+    background: var(--bg); padding: 44px 36px;
+    position: relative; overflow: hidden; transition: background 0.3s;
+  }
+  .skill-card:hover { background: var(--surface); }
+  .skill-card::after {
+    content: ''; position: absolute;
+    bottom: 0; left: 0; height: 2px; width: 0;
+    background: var(--accent); transition: width 0.4s;
+  }
+  .skill-card:hover::after { width: 100%; }
+  .skill-icon { font-size: 28px; margin-bottom: 20px; display: block; }
+  .skill-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; font-weight: 300; margin-bottom: 14px;
+  }
+  .skill-desc {
+    font-size: 13px; line-height: 1.85; color: var(--muted);
+    font-family: 'Space Mono', monospace;
+  }
+  .skill-bar-wrap { margin-top: 24px; height: 1px; background: var(--dim); }
+  .skill-bar-fill {
+    height: 1px; background: var(--accent); width: 0;
+    transition: width 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* ── CONTACT ── */
+  .contact {
+    padding: 100px 52px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+  .contact-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(184,150,90,0.04) 0%, transparent 70%);
+  }
+  .contact-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(44px, 7vw, 96px);
+    font-weight: 300; font-style: italic;
+    line-height: 1.05; position: relative;
+    margin-bottom: 20px;
+  }
+  .contact-heading em { color: var(--accent); font-style: normal; }
+  .contact-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.15em;
+    color: var(--muted); margin-bottom: 52px; position: relative;
+  }
+  .contact-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 2px; max-width: 700px; margin: 0 auto;
+    position: relative;
+  }
+  .contact-item {
+    background: var(--surface); padding: 28px 24px;
+    display: flex; flex-direction: column; gap: 6px;
+    text-decoration: none; transition: background 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .contact-item::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--accent); transform: translateX(-101%);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  .contact-item:hover::before { transform: translateX(0); }
+  .contact-item:hover .contact-item-label,
+  .contact-item:hover .contact-item-value { color: var(--bg); }
+  .contact-item-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--muted); position: relative; transition: color 0.3s;
+  }
+  .contact-item-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; font-weight: 300; color: var(--text);
+    position: relative; transition: color 0.3s;
+  }
+  .contact-arrow {
+    position: absolute; right: 20px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px; color: var(--muted);
+    transition: color 0.3s, transform 0.3s; position: relative;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  footer {
+    padding: 36px 52px; border-top: 1px solid var(--dim);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  footer p {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.2em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .footer-back {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color 0.2s;
+  }
+  .footer-back:hover { color: var(--accent); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes scrollPulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+
+  .reveal { opacity:0; transform:translateY(36px); transition:opacity 0.85s ease, transform 0.85s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    nav { padding: 20px 24px; }
+    .nav-links { display: none; }
+    .nav-ham { display: flex; }
+
+    .hero { padding: 80px 24px 60px; }
+    .hero-deco, .hero-deco2 { display: none; }
+    .hero-scroll { display: none; }
+
+    .info-strip { padding: 0 24px; flex-direction: column; }
+    .info-item { border-right: none; border-bottom: 1px solid var(--dim); padding: 20px 0; }
+    .info-item:last-child { border-bottom: none; }
+
+    .about { grid-template-columns: 1fr; gap: 48px; padding: 64px 24px; }
+    .about-cards { grid-template-columns: 1fr 1fr; }
+
+    .work { padding: 64px 24px; }
+    .work-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .work-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .work-item:nth-child(n) { grid-column: span 1; }
+    .work-item:nth-child(1) { grid-column: span 2; }
+
+    .skills { padding: 64px 24px; }
+    .skills-grid { grid-template-columns: 1fr; }
+
+    .contact { padding: 64px 24px; }
+    .contact-grid { grid-template-columns: 1fr; }
+
+    footer { padding: 28px 24px; flex-direction: column; gap: 12px; text-align: center; }
+  }
+
+  @media (max-width: 480px) {
+    .work-grid { grid-template-columns: 1fr; }
+    .work-item:nth-child(n) { grid-column: span 1; }
+    .about-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">
+    李 瑞 喜
+    <small>Destiny Architect</small>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">소개</a></li>
+    <li><a href="#work">작업</a></li>
+    <li><a href="#skills">전문분야</a></li>
+    <li><a href="#contact">연락</a></li>
+  </ul>
+  <button class="nav-ham" id="hamBtn" aria-label="메뉴">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- 모바일 메뉴 -->
+<div class="nav-mobile" id="mobileNav">
+  <a href="#about" class="nav-close">소개</a>
+  <a href="#work" class="nav-close">작업</a>
+  <a href="#skills" class="nav-close">전문분야</a>
+  <a href="#contact" class="nav-close">연락</a>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-deco"></div>
+  <div class="hero-deco2"></div>
+
+  <div class="hero-eyebrow">Destiny Architect · Filyeon · Seoul</div>
+
+  <h1 class="hero-name-kr">이서희</h1>
+  <div class="hero-name-en">SEA-HEE HEE, PW.D.</div>
+
+  <div class="hero-title-line">
+    <div class="hero-role">
+      <strong>Cornelidge Atelier</strong>
+      Destiny Architect | Filyeon
+    </div>
+  </div>
+
+  <p class="hero-desc">
+    공간과 감각 사이,<br>
+    <em>건축적 언어로 운명을 설계합니다.</em>
+  </p>
+
+  <div class="hero-tags">
+    <span class="hero-tag">Destiny Design</span>
+    <span class="hero-tag">Architecture</span>
+    <span class="hero-tag">Cornelidge Atelier</span>
+    <span class="hero-tag">경성대학교</span>
+  </div>
+
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- INFO STRIP -->
+<div class="info-strip reveal">
+  <div class="info-item">
+    <div class="info-label">소속</div>
+    <div class="info-value">Cornelidge Atelier</div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">직함</div>
+    <div class="info-value">Destiny Architect | Filyeon</div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">학교</div>
+    <div class="info-value">경성대학교 재학중</div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">연락처</div>
+    <div class="info-value"><a href="tel:+82102431316">+010.2431.3162</a></div>
+  </div>
+  <div class="info-item">
+    <div class="info-label">위치</div>
+    <div class="info-value">울산 과학영상진흥원 201호 A</div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section class="about" id="about">
+  <div class="reveal">
+    <div class="sec-label">소개</div>
+    <h2 class="about-heading">
+      공간을<br>
+      <em>설계</em>하는<br>
+      건축가
+    </h2>
+    <p class="about-body">
+      <em>Cornelidge Atelier</em>의 Destiny Architect로서 — 공간이 가진 고유한 감각과 언어를 통해 사람들의 이야기를 건축적으로 풀어냅니다.
+    </p>
+    <p class="about-body" style="margin-top:18px;">
+      경성대학교에서 건축을 공부하며, Filyeon의 이름으로 설계와 공간 디자인에 대한 자신만의 철학을 발전시키고 있습니다.
+    </p>
+  </div>
+  <div class="about-cards reveal reveal-delay-2">
+    <div class="about-card">
+      <div class="card-num">李</div>
+      <div class="card-label">이름의 한자</div>
+    </div>
+    <div class="about-card">
+      <div class="card-num">PW</div>
+      <div class="card-label">전문 자격</div>
+    </div>
+    <div class="about-card">
+      <div class="card-num">울산</div>
+      <div class="card-label">활동 기반</div>
+    </div>
+    <div class="about-card">
+      <div class="card-num">∞</div>
+      <div class="card-label">Destiny</div>
+    </div>
+  </div>
+</section>
+
+<!-- WORK -->
+<section class="work" id="work">
+  <div class="work-header reveal">
+    <div>
+      <div class="sec-label">선택 작업</div>
+      <h2 class="work-heading">Portfolio</h2>
+    </div>
+    <div class="work-filter">
+      <button class="filter-btn active">전체</button>
+      <button class="filter-btn">건축</button>
+      <button class="filter-btn">공간</button>
+      <button class="filter-btn">디자인</button>
+    </div>
+  </div>
+
+  <div class="work-grid reveal">
+    <div class="work-item">
+      <div class="work-thumb">
+        <div class="work-thumb-bg wb1"></div>
+        <div class="work-thumb-deco">
+          <svg width="90" height="90" viewBox="0 0 90 90" fill="none">
+            <rect x="15" y="30" width="60" height="45" stroke="#b8965a" stroke-width="0.5"/>
+            <polygon points="10,30 45,8 80,30" stroke="#b8965a" stroke-width="0.5" fill="none"/>
+            <line x1="45" y1="8" x2="45" y2="75" stroke="#b8965a" stroke-width="0.3" stroke-dasharray="3 4"/>
+          </svg>
+        </div>
+        <div class="work-overlay">
+          <div class="work-cat">건축 · 2024</div>
+          <div class="work-name">Cornelidge Atelier — 주거 설계</div>
+        </div>
+      </div>
+      <div class="work-meta">
+        <span class="work-meta-title">Cornelidge Residence</span>
+        <span class="work-meta-type">Architecture</span>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-thumb">
+        <div class="work-thumb-bg wb2"></div>
+        <div class="work-thumb-deco">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none">
+            <circle cx="36" cy="36" r="28" stroke="#8bb0d4" stroke-width="0.5" stroke-dasharray="4 5"/>
+            <circle cx="36" cy="36" r="16" stroke="#8bb0d4" stroke-width="0.5"/>
+            <line x1="8" y1="36" x2="64" y2="36" stroke="#8bb0d4" stroke-width="0.3"/>
+            <line x1="36" y1="8" x2="36" y2="64" stroke="#8bb0d4" stroke-width="0.3"/>
+          </svg>
+        </div>
+        <div class="work-overlay">
+          <div class="work-cat">공간 · 2024</div>
+          <div class="work-name">Filyeon — 공간 개념 설계</div>
+        </div>
+      </div>
+      <div class="work-meta">
+        <span class="work-meta-title">Filyeon Space Concept</span>
+        <span class="work-meta-type">Interior</span>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-thumb">
+        <div class="work-thumb-bg wb3"></div>
+        <div class="work-thumb-deco">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <rect x="8" y="8" width="48" height="48" stroke="#d4c08a" stroke-width="0.5" transform="rotate(8 32 32)" fill="none"/>
+            <rect x="16" y="16" width="32" height="32" fill="#d4c08a" opacity="0.1"/>
+          </svg>
+        </div>
+        <div class="work-overlay">
+          <div class="work-cat">디자인 · 2023</div>
+          <div class="work-name">울산 과학영상진흥원 프로젝트</div>
+        </div>
+      </div>
+      <div class="work-meta">
+        <span class="work-meta-title">Ulsan Science Project</span>
+        <span class="work-meta-type">Design</span>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-thumb">
+        <div class="work-thumb-bg wb4"></div>
+        <div class="work-thumb-deco">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <path d="M8 56 L32 12 L56 56 Z" stroke="#6a9a7a" stroke-width="0.5" fill="none"/>
+            <path d="M20 56 L32 34 L44 56 Z" fill="#6a9a7a" opacity="0.15"/>
+          </svg>
+        </div>
+        <div class="work-overlay">
+          <div class="work-cat">건축 · 2023</div>
+          <div class="work-name">경성대학교 졸업 프로젝트</div>
+        </div>
+      </div>
+      <div class="work-meta">
+        <span class="work-meta-title">Kyungsung Graduation</span>
+        <span class="work-meta-type">Academic</span>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-thumb">
+        <div class="work-thumb-bg wb5"></div>
+        <div class="work-thumb-deco">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+            <circle cx="28" cy="28" r="20" stroke="#9a7abd" stroke-width="0.5"/>
+            <circle cx="28" cy="18" r="6" fill="#9a7abd" opacity="0.25"/>
+            <path d="M14 44 Q28 36 42 44" stroke="#9a7abd" stroke-width="0.5" fill="none"/>
+          </svg>
+        </div>
+        <div class="work-overlay">
+          <div class="work-cat">공간 · 2023</div>
+          <div class="work-name">Destiny Series Vol.1</div>
+        </div>
+      </div>
+      <div class="work-meta">
+        <span class="work-meta-title">Destiny Series</span>
+        <span class="work-meta-type">Concept</span>
+      </div>
+    </div>
+
+    <div class="work-item">
+      <div class="work-thumb">
+        <div class="work-thumb-bg wb6"></div>
+        <div class="work-thumb-deco">
+          <svg width="100" height="80" viewBox="0 0 100 80" fill="none">
+            <rect x="10" y="20" width="80" height="50" rx="2" stroke="#b8965a" stroke-width="0.5" fill="none"/>
+            <rect x="30" y="20" width="1" height="50" fill="#b8965a" opacity="0.3"/>
+            <rect x="60" y="20" width="1" height="50" fill="#b8965a" opacity="0.3"/>
+            <rect x="10" y="45" width="80" height="1" fill="#b8965a" opacity="0.3"/>
+          </svg>
+        </div>
+        <div class="work-overlay">
+          <div class="work-cat">디자인 · 2024</div>
+          <div class="work-name">Cornelidge Brand Identity</div>
+        </div>
+      </div>
+      <div class="work-meta">
+        <span class="work-meta-title">Brand Identity</span>
+        <span class="work-meta-type">Visual</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section class="skills" id="skills">
+  <div class="sec-label reveal">전문 분야</div>
+  <div class="skills-grid">
+    <div class="skill-card reveal">
+      <span class="skill-icon">⬡</span>
+      <div class="skill-name">건축 설계</div>
+      <p class="skill-desc">공간의 감각과 구조를 통합하는 건축적 접근. Destiny의 시선으로 공간을 재해석합니다.</p>
+      <div class="skill-bar-wrap"><div class="skill-bar-fill" data-width="90"></div></div>
+    </div>
+    <div class="skill-card reveal reveal-delay-1">
+      <span class="skill-icon">◈</span>
+      <div class="skill-name">공간 디자인</div>
+      <p class="skill-desc">인테리어와 공간 연출. 사람과 공간 사이의 관계를 섬세하게 설계합니다.</p>
+      <div class="skill-bar-wrap"><div class="skill-bar-fill" data-width="85"></div></div>
+    </div>
+    <div class="skill-card reveal reveal-delay-2">
+      <span class="skill-icon">✦</span>
+      <div class="skill-name">비주얼 디자인</div>
+      <p class="skill-desc">브랜드 아이덴티티, 건축 도면 시각화 — 설계의 언어를 시각으로 번역합니다.</p>
+      <div class="skill-bar-wrap"><div class="skill-bar-fill" data-width="80"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section class="contact" id="contact">
+  <div class="contact-bg"></div>
+  <h2 class="contact-heading reveal">같이 <em>만들어요</em></h2>
+  <p class="contact-sub reveal">프로젝트 문의, 협업, 어떤 이야기도 환영합니다</p>
+
+  <div class="contact-grid reveal">
+    <a href="tel:+82102431316" class="contact-item">
+      <div class="contact-item-label">전화</div>
+      <div class="contact-item-value" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>+010.2431.3162</span><span>↗</span>
+      </div>
+    </a>
+    <a href="#" class="contact-item">
+      <div class="contact-item-label">소속</div>
+      <div class="contact-item-value" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>Cornelidge Atelier</span><span>↗</span>
+      </div>
+    </a>
+    <a href="#" class="contact-item">
+      <div class="contact-item-label">위치</div>
+      <div class="contact-item-value" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>울산광역시 중구 우정1길 29</span><span>↗</span>
+      </div>
+    </a>
+    <a href="#" class="contact-item">
+      <div class="contact-item-label">스튜디오</div>
+      <div class="contact-item-value" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>과학영상진흥원 201호 A</span><span>↗</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 이서희 · SEA-HEE HEE — All rights reserved</p>
+  <a href="#" class="footer-back">↑ 맨 위로</a>
+</footer>
+
+<script>
+  // 커서
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let rx = 0, ry = 0, cx = 0, cy = 0;
+  document.addEventListener('mousemove', e => {
+    cx = e.clientX; cy = e.clientY;
+    cursor.style.left = cx + 'px'; cursor.style.top = cy + 'px';
+  });
+  (function animateRing() {
+    rx += (cx - rx) * 0.12; ry += (cy - ry) * 0.12;
+    ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  })();
+  document.querySelectorAll('a, button, .work-item, .about-card, .skill-card').forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.style.width = '14px'; cursor.style.height = '14px';
+      ring.style.width = '52px'; ring.style.height = '52px';
+      ring.style.borderColor = 'rgba(184,150,90,0.6)';
+    });
+    el.addEventListener('mouseleave', () => {
+      cursor.style.width = '6px'; cursor.style.height = '6px';
+      ring.style.width = '32px'; ring.style.height = '32px';
+      ring.style.borderColor = 'rgba(184,150,90,0.35)';
+    });
+  });
+
+  // 네비 스크롤
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // 햄버거 메뉴
+  const hamBtn = document.getElementById('hamBtn');
+  const mobileNav = document.getElementById('mobileNav');
+  hamBtn.addEventListener('click', () => {
+    hamBtn.classList.toggle('open');
+    mobileNav.classList.toggle('open');
+    document.body.style.overflow = mobileNav.classList.contains('open') ? 'hidden' : '';
+  });
+  document.querySelectorAll('.nav-close').forEach(a => {
+    a.addEventListener('click', () => {
+      hamBtn.classList.remove('open');
+      mobileNav.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+
+  // 스크롤 리빌
+  const revealObs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+  // 스킬바 애니메이션
+  const barObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.querySelectorAll('.skill-bar-fill').forEach(b => {
+          b.style.width = b.dataset.width + '%';
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.skills-grid').forEach(g => barObs.observe(g));
+
+  // 필터 버튼
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
